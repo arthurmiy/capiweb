@@ -1,0 +1,14 @@
+{
+  "name": "CAPIVARAS Web",
+  "short_name": "CapiWeb",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "./images/icon.png",
+      "type": "image/png",
+      "sizes": "144x144"
+    }
+  ]
+}
