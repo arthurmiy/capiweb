@@ -6,7 +6,7 @@ import { UIPanel } from "./libs/ui.js";
 
 import { EditorControls } from "./EditorControls.js";
 
-// import { ViewportCamera } from './Viewport.Camera.js';
+import { ViewportCamera } from "./Viewport.Camera.js";
 // import { ViewportShading } from './Viewport.Shading.js';
 // import { ViewportInfo } from './Viewport.Info.js';
 
@@ -20,25 +20,39 @@ import { ViewHelper } from "./Viewport.ViewHelper.js";
 // import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 function Viewport(editor) {
+  //communication with capi editor
   const signals = editor.signals;
 
+  //viewport
   const container = new UIPanel();
   container.setId("viewport");
   container.setPosition("absolute");
 
-  // container.add(new ViewportCamera(editor));
+  container.add(new ViewportCamera(editor));
   // container.add(new ViewportShading(editor));
   // container.add(new ViewportInfo(editor));
 
   //
 
   let renderer = null;
+  var renderRequested = false;
   let pmremGenerator = null;
 
   const camera = editor.camera;
+  const ortoCamera = editor.ortoCamera;
   const scene = editor.scene;
   const sceneHelpers = editor.sceneHelpers;
   let showSceneHelpers = true;
+
+  ////////////////////////////////////////////////////////////////////////////
+  var containerAxes, rendererAxes, sceneAxes, cameraAxes, AxesHelper;
+
+  var controlsTargetHelper;
+
+  var rgeometry, rmaterial, rmesh;
+  var pgeometry, pmaterial, pplane;
+  var compass;
+  /////////////////////////////////////////////////////////////////////////////
 
   // helpers
 
@@ -267,6 +281,8 @@ function Viewport(editor) {
   controls.addEventListener("change", function () {
     signals.cameraChanged.dispatch(camera);
     signals.refreshSidebarObject3D.dispatch(camera);
+    editor.ortoCamera.position.copy(camera.position);
+    editor.ortoCamera.rotation.copy(camera.rotation);
   });
   viewHelper.center = controls.center;
 
@@ -422,6 +438,9 @@ function Viewport(editor) {
     backgroundIntensity
   ) {
     switch (backgroundType) {
+      case "CapiClassic":
+        scene.background = new THREE.Color(0xececec);
+        break;
       case "None":
         scene.background = null;
 
@@ -542,12 +561,14 @@ function Viewport(editor) {
       viewportCamera.aspect = editor.camera.aspect;
       viewportCamera.projectionMatrix.copy(editor.camera.projectionMatrix);
     } else if (viewportCamera.isOrthographicCamera) {
-      // TODO
+      viewportCamera.left = -editor.camera.aspect;
+      viewportCamera.right = editor.camera.aspect;
     }
 
     // disable EditorControls when setting a user camera
 
-    controls.enabled = viewportCamera === editor.camera;
+    controls.enabled =
+      viewportCamera === editor.camera || viewportCamera === editor.ortoCamera;
 
     render();
   });
@@ -631,9 +652,9 @@ function Viewport(editor) {
       needsUpdate = true;
     }
 
-    if (vr.currentSession !== null) {
-      needsUpdate = true;
-    }
+    // if (vr.currentSession !== null) {
+    //   needsUpdate = true;
+    // }
 
     if (needsUpdate === true) render();
   }
@@ -657,7 +678,13 @@ function Viewport(editor) {
     if (camera === editor.viewportCamera) {
       renderer.autoClear = false;
       if (showSceneHelpers === true) renderer.render(sceneHelpers, camera);
-      if (vr.currentSession === null) viewHelper.render(renderer);
+      // if (vr.currentSession === null) viewHelper.render(renderer);
+      renderer.autoClear = true;
+    }
+    if (ortoCamera === editor.viewportCamera) {
+      renderer.autoClear = false;
+      if (showSceneHelpers === true) renderer.render(sceneHelpers, ortoCamera);
+      // if (vr.currentSession === null) viewHelper.render(renderer);
       renderer.autoClear = true;
     }
 

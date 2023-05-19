@@ -1,5 +1,4 @@
 import * as THREE from "three";
-
 import { Config } from "./Config.js";
 import { Loader } from "./Loader.js";
 import { History as _History } from "./History.js";
@@ -9,24 +8,25 @@ import { Selector } from "./Viewport.Selector.js";
 
 THREE.ColorManagement.enabled = true;
 
-var _DEFAULT_CAMERA = new THREE.PerspectiveCamera(50, 1, 0.01, 1000);
+var _DEFAULT_CAMERA = new THREE.PerspectiveCamera(35, 1, 0.01, 1000);
 _DEFAULT_CAMERA.name = "Camera";
 _DEFAULT_CAMERA.position.set(0, 5, 10);
 _DEFAULT_CAMERA.lookAt(new THREE.Vector3());
+
+var _DEFAULT_CAMERA_ORTO = new THREE.OrthographicCamera(
+  -_DEFAULT_CAMERA.aspect,
+  _DEFAULT_CAMERA.aspect,
+  1,
+  -1
+);
+_DEFAULT_CAMERA_ORTO.name = "Ortographic";
+_DEFAULT_CAMERA_ORTO.position.set(0, 5, 10);
+_DEFAULT_CAMERA_ORTO.lookAt(new THREE.Vector3());
 
 function Capi() {
   const Signal = signals.Signal; // eslint-disable-line no-undef
 
   this.signals = {
-    // script
-
-    editScript: new Signal(),
-
-    // player
-
-    startPlayer: new Signal(),
-    stopPlayer: new Signal(),
-
     // vr
 
     toggleVR: new Signal(),
@@ -100,6 +100,7 @@ function Capi() {
   this.loader = new Loader(this);
 
   this.camera = _DEFAULT_CAMERA.clone();
+  this.ortoCamera = _DEFAULT_CAMERA_ORTO.clone();
 
   this.scene = new THREE.Scene();
   this.scene.name = "Scene";
@@ -125,6 +126,7 @@ function Capi() {
   this.viewportShading = "default";
 
   this.addCamera(this.camera);
+  this.addCamera(this.ortoCamera);
 }
 
 Capi.prototype = {
